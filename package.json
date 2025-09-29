@@ -1,0 +1,26 @@
+{
+  "name": "page-vault",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Write2Hack/page-vault.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Write2Hack/page-vault/issues"
+  },
+  "homepage": "https://github.com/Write2Hack/page-vault#readme",
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.58.0",
+    "esbuild": "^0.25.10"
+  }
+}
