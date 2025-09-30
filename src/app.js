@@ -93,6 +93,7 @@ async function loadBookmarks() {
         link.href = bookmark.url;
         link.target = '_blank';
         link.textContent = bookmark.title;
+        link.addEventListener('click', () => incrementVisits(bookmark.id));
         
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
@@ -115,6 +116,14 @@ async function deleteBookmark(id) {
         alert('Error deleting bookmark: ' + error.message);
     } else {
         loadBookmarks();
+    }
+}
+
+async function incrementVisits(id) {
+    const { error } = await supabase.rpc('increment_visits', { bookmark_id: id });
+
+    if (error) {
+        console.error('Error incrementing visits:', error.message);
     }
 }
 
