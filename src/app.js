@@ -89,11 +89,18 @@ async function loadBookmarks() {
         const bookmarkElement = document.createElement('div');
         bookmarkElement.className = 'bookmark-item';
         
+        const favicon = document.createElement('img');
+        favicon.src = `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url).hostname}&sz=128`;
+        favicon.className = 'favicon';
+        favicon.alt = '';
+        
         const link = document.createElement('a');
         link.href = bookmark.url;
         link.target = '_blank';
         link.textContent = bookmark.title;
         link.addEventListener('click', () => incrementVisits(bookmark.id));
+        
+        bookmarkElement.appendChild(favicon);
         
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';

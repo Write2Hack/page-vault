@@ -97,6 +97,19 @@ button:hover {
     text-decoration: none;
 }
 
+.bookmark-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.favicon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    border-radius:50%;
+}
+
 .bookmark-item a:hover {
     text-decoration: underline;
 }
