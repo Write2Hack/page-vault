@@ -1,49 +1,46 @@
 import { supabase } from '../../lib/supabase.js';
 
 const template = document.createElement('template');
-let templateLoaded = false;
-let pendingComponents = [];
-
-fetch('src/components/Bookmarks/Bookmarks.html')
-    .then(response => response.text())
-    .then(html => {
-        template.innerHTML = html;
-        templateLoaded = true;
-        pendingComponents.forEach(component => component.initializeComponent());
-        pendingComponents = [];
-    })
-    .catch(error => {
-        console.error('Error loading bookmarks component template:', error);
-    });
+template.innerHTML = `
+<div id="bookmarks-container" class="bookmarks-container">
+    <div class="header">
+        <h2>My Bookmarks</h2>
+        <button id="signOutBtn" class="btn btn-outline-secondary">Sign Out</button>
+    </div>
+    <div class="add-bookmark">
+        <input type="text" id="bookmarkTitle" placeholder="Title">
+        <input type="url" id="bookmarkUrl" placeholder="URL">
+        <button id="addBookmarkBtn" class="btn btn-outline-success">Add Bookmark</button>
+    </div>
+    <div id="bookmarksList" class="bookmarks-list">
+        <!-- Bookmarks will be inserted here -->
+    </div>
+</div>
+`;
 
 class BookmarksComponent extends HTMLElement {
     constructor() {
         super();
-        this.attachShadow({ mode: 'open' });
     }
 
     connectedCallback() {
-        if (templateLoaded) {
-            this.attachTemplate();
-            this.initializeComponent();
-        } else {
-            pendingComponents.push(this);
-        }
+        this.attachTemplate();
+        this.initializeComponent();
     }
 
     attachTemplate() {
-        while (this.shadowRoot.firstChild) {
-            this.shadowRoot.removeChild(this.shadowRoot.firstChild);
+        while (this.firstChild) {
+            this.removeChild(this.firstChild);
         }
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
+        this.appendChild(template.content.cloneNode(true));
     }
 
     initializeComponent() {
-        this.addBookmarkBtn = this.shadowRoot.querySelector('#addBookmarkBtn');
-        this.signOutBtn = this.shadowRoot.querySelector('#signOutBtn');
-        this.bookmarkTitleInput = this.shadowRoot.querySelector('#bookmarkTitle');
-        this.bookmarkUrlInput = this.shadowRoot.querySelector('#bookmarkUrl');
-        this.bookmarksList = this.shadowRoot.querySelector('#bookmarksList');
+        this.addBookmarkBtn = this.querySelector('#addBookmarkBtn');
+        this.signOutBtn = this.querySelector('#signOutBtn');
+        this.bookmarkTitleInput = this.querySelector('#bookmarkTitle');
+        this.bookmarkUrlInput = this.querySelector('#bookmarkUrl');
+        this.bookmarksList = this.querySelector('#bookmarksList');
 
         if (!this.addBookmarkBtn || !this.signOutBtn || 
             !this.bookmarkTitleInput || !this.bookmarkUrlInput || 
