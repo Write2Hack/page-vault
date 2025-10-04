@@ -13,3 +13,20 @@ html, body, #app {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+
+/* Favicon styles */
+.favicon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.bookmark-list .bookmark-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.bookmark-list .bookmark-item:last-child {
+    border-bottom: none;
+}
