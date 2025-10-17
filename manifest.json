@@ -2,7 +2,7 @@
   "name": "Page Vault",
   "short_name": "PageVault",
   "start_url": "./",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#ffffff",
   "theme_color": "#000000",
   "icons": [
