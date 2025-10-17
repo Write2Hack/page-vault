@@ -18,7 +18,7 @@
     }
   ],
   "share_target": {
-    "action": "./#/bookmarks",
+    "action": "/share-target",
     "method": "GET",
     "params": {
       "title": "title",
