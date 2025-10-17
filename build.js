@@ -13,13 +13,10 @@ async function build() {
       sourcemap: true,
     });
 
-    // First build
+    // Build once and exit
     await ctx.rebuild();
     console.log('Build completed successfully!');
-
-    // Watch mode
-    await ctx.watch();
-    console.log('Watching for changes...');
+    process.exit(0);
   } catch (err) {
     console.error('Build failed:', err.message);
     process.exit(1);
