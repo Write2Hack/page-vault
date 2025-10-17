@@ -3,12 +3,21 @@ export const router = {
         const hash = window.location.hash || '#/';
         const path = hash.slice(1); // Remove the # symbol
         const appContainer = document.getElementById('app');
+        const params = new URLSearchParams(window.location.search);
 
         // Clear the container
         appContainer.innerHTML = '';
 
         if (path === 'bookmarks') {
             const bookmarksComponent = document.createElement('bookmarks-component');
+            // Pass share data if available
+            const sharedUrl = params.get('url') || '';
+            const sharedTitle = params.get('title') || '';
+            
+            if (sharedUrl && sharedTitle) {
+                bookmarksComponent.setAttribute('shared-url', sharedUrl);
+                bookmarksComponent.setAttribute('shared-title', sharedTitle);
+            }
             appContainer.appendChild(bookmarksComponent);
         } else {
             const authComponent = document.createElement('auth-component');
@@ -19,22 +28,6 @@ export const router = {
     go: (path) => {
         window.location.hash = path;
     }
-};
-
-const routes = {
-  '/share-target': async () => {
-    const params = new URLSearchParams(window.location.search);
-    const sharedUrl = params.get('url');
-    const sharedTitle = params.get('title');
-    
-    if (sharedUrl) {
-      // Navigate to bookmarks and trigger save
-      window.location.href = '/#/bookmarks?share=' + encodeURIComponent(JSON.stringify({
-        url: sharedUrl,
-        title: sharedTitle || sharedUrl
-      }));
-    }
-  }
 };
 
 // Handle initial load

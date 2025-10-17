@@ -51,9 +51,32 @@ class BookmarksComponent extends HTMLElement {
         this.selectedTags = new Set();
     }
 
+    static get observedAttributes() {
+        return ['shared-url', 'shared-title'];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (!this.bookmarkUrlInput || !this.bookmarkTitleInput) return;
+        
+        if (name === 'shared-url') {
+            this.bookmarkUrlInput.value = newValue || '';
+        } else if (name === 'shared-title') {
+            this.bookmarkTitleInput.value = newValue || '';
+        }
+    }
+
     connectedCallback() {
         this.attachTemplate();
         this.initializeComponent();
+        
+        // Handle shared data after initialization
+        const sharedUrl = this.getAttribute('shared-url');
+        const sharedTitle = this.getAttribute('shared-title');
+        
+        if (sharedUrl) {
+            this.bookmarkUrlInput.value = sharedUrl;
+            this.bookmarkTitleInput.value = sharedTitle || sharedUrl;
+        }
     }
 
     attachTemplate() {
@@ -83,28 +106,6 @@ class BookmarksComponent extends HTMLElement {
 
         this.loadTags();
         this.loadBookmarks();
-
-        // Move URL parameter handling to after elements are initialized
-        // and wrap in setTimeout to ensure DOM is fully ready
-        setTimeout(() => {
-            const params = new URLSearchParams(window.location.search);
-            console.log('Share params:', {
-                url: params.get('url'),
-                title: params.get('title'),
-                text: params.get('text')
-            });
-
-            const sharedUrl = params.get('url') || params.get('text') || '';
-            const sharedTitle = params.get('title') || '';
-            
-            if (sharedUrl) {
-                console.log('Setting shared content:', { sharedUrl, sharedTitle });
-                this.bookmarkUrlInput.value = sharedUrl;
-                this.bookmarkTitleInput.value = sharedTitle || sharedUrl;
-                // Clear the URL params
-                window.history.replaceState({}, '', '/#/bookmarks');
-            }
-        }, 100);
     }
 
     async loadTags() {
