@@ -84,17 +84,27 @@ class BookmarksComponent extends HTMLElement {
         this.loadTags();
         this.loadBookmarks();
 
-        // Handle shared content from Web Share API
-        const params = new URLSearchParams(window.location.search);
-        const sharedUrl = params.get('url') || 'no url?';
-        const sharedTitle = params.get('title') || 'no title?';
-        
-        if (sharedUrl) {
-            this.bookmarkUrlInput.value = sharedUrl;
-            this.bookmarkTitleInput.value = sharedTitle || sharedUrl;
-            // Clear the URL params
-            window.history.replaceState({}, '', '/#/bookmarks');
-        }
+        // Move URL parameter handling to after elements are initialized
+        // and wrap in setTimeout to ensure DOM is fully ready
+        setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            console.log('Share params:', {
+                url: params.get('url'),
+                title: params.get('title'),
+                text: params.get('text')
+            });
+
+            const sharedUrl = params.get('url') || params.get('text') || '';
+            const sharedTitle = params.get('title') || '';
+            
+            if (sharedUrl) {
+                console.log('Setting shared content:', { sharedUrl, sharedTitle });
+                this.bookmarkUrlInput.value = sharedUrl;
+                this.bookmarkTitleInput.value = sharedTitle || sharedUrl;
+                // Clear the URL params
+                window.history.replaceState({}, '', '/#/bookmarks');
+            }
+        }, 100);
     }
 
     async loadTags() {
@@ -358,24 +368,3 @@ class BookmarksComponent extends HTMLElement {
 }
 
 customElements.define('bookmarks-component', BookmarksComponent);
-
-// React component to handle shared bookmarks
-function Bookmarks() {
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('share') === 'true') {
-      const sharedData = JSON.parse(localStorage.getItem('shared_bookmark'));
-      if (sharedData) {
-        handleAddBookmark(sharedData);
-        localStorage.removeItem('shared_bookmark');
-        window.history.replaceState({}, '', '/#/bookmarks');
-      }
-    }
-  }, []);
-
-  return (
-    `<bookmarks-component></bookmarks-component>`
-  );
-}
-
-customElements.define('bookmarks-react', Bookmarks);
