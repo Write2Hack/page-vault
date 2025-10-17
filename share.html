@@ -29,58 +29,99 @@
         </form>
     </div>
 
-    <script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module">
+        import { supabase } from './src/lib/supabase.js';
+
         // Get shared data from URL
         const params = new URLSearchParams(window.location.search);
-        document.getElementById('url').value = params.get('url') || '';
-        document.getElementById('title').value = params.get('title') || '';
+        const sharedUrl = params.get('link') || params.get('url') || params.get('text') || '';
+        const sharedTitle = params.get('title') || '';
 
-        // Load existing tags
-        fetch('./api/tags')
-            .then(response => response.json())
-            .then(tags => {
-                const tagButtons = document.getElementById('tagButtons');
-                tags.forEach(tag => {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'btn btn-outline-secondary btn-sm m-1';
-                    btn.textContent = tag;
-                    btn.onclick = () => {
-                        const tagsInput = document.getElementById('tags');
-                        const currentTags = tagsInput.value.split(',').map(t => t.trim()).filter(t => t);
-                        if (!currentTags.includes(tag)) {
-                            currentTags.push(tag);
-                            tagsInput.value = currentTags.join(', ');
-                        }
-                    };
-                    tagButtons.appendChild(btn);
+        // Set input values
+        document.getElementById('url').value = sharedUrl;
+        document.getElementById('title').value = sharedTitle || sharedUrl;
+
+        // Selected tags tracking
+        const selectedTags = new Set();
+
+        // Load existing tags from Supabase
+        async function loadTags() {
+            const { data: tags, error } = await supabase
+                .from('tags')
+                .select('*')
+                .order('name');
+
+            if (error) {
+                console.error('Error loading tags:', error);
+                return;
+            }
+
+            const tagButtons = document.getElementById('tagButtons');
+            tagButtons.innerHTML = tags.map(tag => `
+                <button type="button" class="btn btn-outline-secondary btn-sm m-1 tag-button" 
+                        data-tag-id="${tag.id}">
+                    ${tag.name}
+                </button>
+            `).join('');
+
+            // Add click handlers for tag buttons
+            tagButtons.querySelectorAll('.tag-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const tagId = button.dataset.tagId;
+                    if (selectedTags.has(tagId)) {
+                        selectedTags.delete(tagId);
+                        button.classList.remove('btn-secondary');
+                        button.classList.add('btn-outline-secondary');
+                    } else {
+                        selectedTags.add(tagId);
+                        button.classList.remove('btn-outline-secondary');
+                        button.classList.add('btn-secondary');
+                    }
                 });
             });
+        }
 
-        // Handle form submission
+        // Load tags when page loads
+        loadTags();
+
+        // Update form submission to handle tags
         document.getElementById('shareForm').onsubmit = async (e) => {
             e.preventDefault();
-            const data = {
-                url: document.getElementById('url').value,
-                title: document.getElementById('title').value,
-                tags: document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t)
-            };
+            
+            // Insert the bookmark
+            const { data: bookmarkData, error: bookmarkError } = await supabase
+                .from('bookmarks')
+                .insert([{
+                    title: document.getElementById('title').value,
+                    url: document.getElementById('url').value
+                }])
+                .select();
 
-            try {
-                const response = await fetch('./api/bookmarks', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                if (response.ok) {
-                    window.close();
-                    // Fallback if window.close() doesn't work
-                    window.location.href = './';
-                }
-            } catch (error) {
-                console.error('Error saving bookmark:', error);
+            if (bookmarkError) {
+                alert('Error adding bookmark: ' + bookmarkError.message);
+                return;
             }
+
+            const bookmarkId = bookmarkData[0].id;
+
+            // Create folder relationships for selected tags
+            for (const tagId of selectedTags) {
+                const { error: folderError } = await supabase
+                    .from('folders')
+                    .insert([{
+                        bookmark_id: bookmarkId,
+                        tag_id: tagId
+                    }]);
+
+                if (folderError) {
+                    console.error('Error creating folder relationship:', folderError);
+                }
+            }
+
+            window.close();
+            // Fallback if window.close() doesn't work
+            window.location.href = './';
         };
     </script>
 </body>
