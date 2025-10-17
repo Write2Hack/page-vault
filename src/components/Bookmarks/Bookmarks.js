@@ -15,17 +15,23 @@ template.innerHTML = `
             <div class="card">
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <input type="text" id="bookmarkTitle" class="form-control" placeholder="Title">
+                        <div class="col-12 col-md-8">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <input type="text" id="bookmarkTitle" class="form-control" placeholder="Title">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="url" id="bookmarkUrl" class="form-control" placeholder="URL">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <input type="url" id="bookmarkUrl" class="form-control" placeholder="URL">
+                        <div class="col-12 col-md-4 d-flex align-items-start justify-content-end">
+                            <button id="addBookmarkBtn" class="btn btn-success">Add Bookmark</button>
                         </div>
-                        <div class="col-md-3">
-                            <input type="text" id="bookmarkTags" class="form-control" placeholder="Tags (comma separated)">
-                        </div>
-                        <div class="col-md-1">
-                            <button id="addBookmarkBtn" class="btn btn-success w-100">Add</button>
+                        <div class="col-12">
+                            <div id="tagButtons" class="d-flex gap-2 flex-wrap">
+                                <!-- Tag buttons will be inserted here -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -42,6 +48,7 @@ template.innerHTML = `
 class BookmarksComponent extends HTMLElement {
     constructor() {
         super();
+        this.selectedTags = new Set();
     }
 
     connectedCallback() {
@@ -61,12 +68,12 @@ class BookmarksComponent extends HTMLElement {
         this.signOutBtn = this.querySelector('#signOutBtn');
         this.bookmarkTitleInput = this.querySelector('#bookmarkTitle');
         this.bookmarkUrlInput = this.querySelector('#bookmarkUrl');
-        this.bookmarkTagsInput = this.querySelector('#bookmarkTags');
+        this.tagButtonsContainer = this.querySelector('#tagButtons');
         this.bookmarksList = this.querySelector('#bookmarksList');
 
         if (!this.addBookmarkBtn || !this.signOutBtn || 
             !this.bookmarkTitleInput || !this.bookmarkUrlInput || 
-            !this.bookmarkTagsInput || !this.bookmarksList) {
+            !this.tagButtonsContainer || !this.bookmarksList) {
             console.error('Required elements not found in bookmarks component');
             return;
         }
@@ -74,23 +81,55 @@ class BookmarksComponent extends HTMLElement {
         this.addBookmarkBtn.addEventListener('click', () => this.addBookmark());
         this.signOutBtn.addEventListener('click', () => this.signOut());
 
+        this.loadTags();
         this.loadBookmarks();
+    }
+
+    async loadTags() {
+        const { data: tags, error } = await supabase
+            .from('tags')
+            .select('*')
+            .order('name');
+
+        if (error) {
+            console.error('Error loading tags:', error);
+            return;
+        }
+
+        this.tagButtonsContainer.innerHTML = tags.map(tag => `
+            <button class="btn btn-outline-secondary btn-sm tag-button mb-1" data-tag-id="${tag.id}">
+                ${tag.name}
+            </button>
+        `).join('');
+
+        this.tagButtonsContainer.querySelectorAll('.tag-button').forEach(button => {
+            button.addEventListener('click', () => this.toggleTag(button));
+        });
+    }
+
+    toggleTag(button) {
+        const tagId = button.dataset.tagId;
+        if (this.selectedTags.has(tagId)) {
+            this.selectedTags.delete(tagId);
+            button.classList.remove('btn-secondary');
+            button.classList.add('btn-outline-secondary');
+        } else {
+            this.selectedTags.add(tagId);
+            button.classList.remove('btn-outline-secondary');
+            button.classList.add('btn-secondary');
+        }
     }
 
     async addBookmark() {
         const title = this.bookmarkTitleInput.value.trim();
         const url = this.bookmarkUrlInput.value.trim();
-        const tagNames = this.bookmarkTagsInput.value
-            .split(',')
-            .map(tag => tag.trim().toLowerCase())
-            .filter(tag => tag);
 
         if (!title || !url) {
             alert('Please enter both title and URL');
             return;
         }
 
-        // First, insert the bookmark
+        // Insert the bookmark
         const { data: bookmarkData, error: bookmarkError } = await supabase
             .from('bookmarks')
             .insert([{ title, url }])
@@ -103,31 +142,8 @@ class BookmarksComponent extends HTMLElement {
 
         const bookmarkId = bookmarkData[0].id;
 
-        // Handle tags and relationships
-        for (const tagName of tagNames) {
-            // Check if tag exists or create it
-            let { data: existingTags } = await supabase
-                .from('tags')
-                .select('id')
-                .eq('name', tagName);
-
-            let tagId;
-            if (!existingTags || existingTags.length === 0) {
-                const { data: newTag, error: tagError } = await supabase
-                    .from('tags')
-                    .insert([{ name: tagName }])
-                    .select();
-
-                if (tagError) {
-                    console.error('Error creating tag:', tagError);
-                    continue;
-                }
-                tagId = newTag[0].id;
-            } else {
-                tagId = existingTags[0].id;
-            }
-
-            // Create relationship in folders table
+        // Create folder relationships for selected tags
+        for (const tagId of this.selectedTags) {
             const { error: folderError } = await supabase
                 .from('folders')
                 .insert([{
@@ -140,10 +156,15 @@ class BookmarksComponent extends HTMLElement {
             }
         }
 
-        // Clear inputs and reload
+        // Clear inputs and selection
         this.bookmarkTitleInput.value = '';
         this.bookmarkUrlInput.value = '';
-        this.bookmarkTagsInput.value = '';
+        this.selectedTags.clear();
+        this.tagButtonsContainer.querySelectorAll('.tag-button').forEach(button => {
+            button.classList.remove('btn-secondary');
+            button.classList.add('btn-outline-secondary');
+        });
+        
         this.loadBookmarks();
     }
 
