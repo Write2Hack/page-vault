@@ -21,6 +21,22 @@ export const router = {
     }
 };
 
+const routes = {
+  '/share-target': async () => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedUrl = params.get('url');
+    const sharedTitle = params.get('title');
+    
+    if (sharedUrl) {
+      // Navigate to bookmarks and trigger save
+      window.location.href = '/#/bookmarks?share=' + encodeURIComponent(JSON.stringify({
+        url: sharedUrl,
+        title: sharedTitle || sharedUrl
+      }));
+    }
+  }
+};
+
 // Handle initial load
 window.addEventListener('load', () => {
     router.handleLocation();

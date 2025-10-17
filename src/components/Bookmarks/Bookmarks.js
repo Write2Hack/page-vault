@@ -83,6 +83,22 @@ class BookmarksComponent extends HTMLElement {
 
         this.loadTags();
         this.loadBookmarks();
+
+        // Handle shared content
+        const params = new URLSearchParams(window.location.search);
+        const sharedData = params.get('share');
+        
+        if (sharedData) {
+            try {
+                const { url, title } = JSON.parse(decodeURIComponent(sharedData));
+                // Add the shared bookmark
+                this.addBookmark({ url, title });
+                // Clear the URL
+                window.history.replaceState({}, '', '/#/bookmarks');
+            } catch (error) {
+                console.error('Failed to parse shared data:', error);
+            }
+        }
     }
 
     async loadTags() {
@@ -346,3 +362,24 @@ class BookmarksComponent extends HTMLElement {
 }
 
 customElements.define('bookmarks-component', BookmarksComponent);
+
+// React component to handle shared bookmarks
+function Bookmarks() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('share') === 'true') {
+      const sharedData = JSON.parse(localStorage.getItem('shared_bookmark'));
+      if (sharedData) {
+        handleAddBookmark(sharedData);
+        localStorage.removeItem('shared_bookmark');
+        window.history.replaceState({}, '', '/#/bookmarks');
+      }
+    }
+  }, []);
+
+  return (
+    `<bookmarks-component></bookmarks-component>`
+  );
+}
+
+customElements.define('bookmarks-react', Bookmarks);
