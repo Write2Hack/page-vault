@@ -84,20 +84,16 @@ class BookmarksComponent extends HTMLElement {
         this.loadTags();
         this.loadBookmarks();
 
-        // Handle shared content
+        // Handle shared content from Web Share API
         const params = new URLSearchParams(window.location.search);
-        const sharedData = params.get('share');
+        const sharedUrl = params.get('url') || 'no url?';
+        const sharedTitle = params.get('title') || 'no title?';
         
-        if (sharedData) {
-            try {
-                const { url, title } = JSON.parse(decodeURIComponent(sharedData));
-                // Add the shared bookmark
-                this.addBookmark({ url, title });
-                // Clear the URL
-                window.history.replaceState({}, '', '/#/bookmarks');
-            } catch (error) {
-                console.error('Failed to parse shared data:', error);
-            }
+        if (sharedUrl) {
+            this.bookmarkUrlInput.value = sharedUrl;
+            this.bookmarkTitleInput.value = sharedTitle || sharedUrl;
+            // Clear the URL params
+            window.history.replaceState({}, '', '/#/bookmarks');
         }
     }
 

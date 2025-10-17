@@ -35,12 +35,12 @@
 
         // Get shared data from URL
         const params = new URLSearchParams(window.location.search);
-        const sharedUrl = params.get('link') || params.get('url') || params.get('text') || '';
-        const sharedTitle = params.get('title') || '';
+        const sharedUrl = params.get('url') || 'url?';
+        const sharedTitle = params.get('title') || 'title?';
 
         // Set input values
         document.getElementById('url').value = sharedUrl;
-        document.getElementById('title').value = sharedTitle || sharedUrl;
+        document.getElementById('title').value = sharedTitle;
 
         // Selected tags tracking
         const selectedTags = new Set();

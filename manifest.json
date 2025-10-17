@@ -18,12 +18,12 @@
     }
   ],
   "share_target": {
-    "action": "./share.html",
+    "action": "./#/bookmarks",
     "method": "GET",
     "params": {
       "title": "title",
       "text": "text",
-      "url": "link"
+      "url": "url"
     }
   }
 }
